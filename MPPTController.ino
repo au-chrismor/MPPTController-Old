@@ -1,3 +1,5 @@
+#include <Wire.h>
+#include <LiquidCrystal_I2C.h>
 #include <math.h>
 #include "MPPTController.h"
 
@@ -39,15 +41,17 @@
  * D11 - (MOSI)
  * D12 - (MISO)
  * D13 - (SCK)
- * A0  - Vin
- * A1  - Iin
- * A2  - Vout
+ * A0  - Vout
+ * A1  - Iout
+ * A2  - 
  * A3  -
  * A4  - SDA
  * A5  - SCL
  * A6  -
  * A7  -
  */
+
+LiquidCrystal_I2C lcd(0x27, 16, 2);
 
 float readVolts(void){
   return (float)analogRead(VOUT) * (float)VOLTAGE_SCALE;
@@ -76,7 +80,15 @@ void pwmDown(void) {
 void setup() {
   Serial.begin(115200);
   while(!Serial);
-  Serial.println("MPPT Controller 0.0.1");
+#ifdef _DEBUG  
+  Serial.print("MPPT Controller ");
+  Serial.println(VERSION);
+#endif
+  lcd.init();
+  lcd.setCursor(0,0);
+  lcd.print("Ver:");
+  lcd.setCursor(0,4);
+  lcd.print(VERSION);
   pinMode(ENC_A, INPUT_PULLUP);
   pinMode(ENC_B, INPUT_PULLUP);
   pinMode(ENC_BUTTON, INPUT_PULLUP);
@@ -96,6 +108,7 @@ void loop() {
   volts = readVolts();
   amps = readAmps();
   currentPower = calculatePower(volts, amps);
+#ifdef _DEBUG  
   Serial.print("Vin, Iin, Power, PWM: ");
   Serial.print(String(volts));
   Serial.print(", ");
@@ -105,6 +118,13 @@ void loop() {
   Serial.print(", ");
   Serial.print(String(int((float)powerOut/(float)256 * 100)));
   Serial.println();
+#endif
+  lcd.setCursor(0,0);
+  lcd.print("PWR           % ");
+  lcd.setCursor(0,1);
+  lcd.print(String(currentPower));
+  lcd.setCursor(13,1);
+  lcd.print(String(int((float)powerOut/(float)256 * 100)));
   analogWrite(DRIVE, powerOut);
   if(lastPower < currentPower) {
     if(volts > lastVoltage)
