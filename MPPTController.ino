@@ -49,6 +49,14 @@
  * A7  -
  */
 
+float readVolts(void){
+  return (float)analogRead(VOUT) * (float)VOLTAGE_SCALE;
+}
+
+float readAmps(void) {
+  return (float)abs(analogRead(IOUT)-512) * (float)CURRENT_SCALE / 0.066;
+}
+
 float calculatePower(float vIn, float iIn) {
   float power = 0.0;
   power = (vIn * iIn);
@@ -85,8 +93,8 @@ void loop() {
   lastPower = currentPower;
     lastVoltage = volts;
 
-  volts = analogRead(VOUT) * (float)VOLTAGE_SCALE;
-  amps = abs(analogRead(IOUT)-512) * (float)CURRENT_SCALE / 0.066;
+  volts = readVolts();
+  amps = readAmps();
   currentPower = calculatePower(volts, amps);
   Serial.print("Vin, Iin, Power, PWM: ");
   Serial.print(String(volts));
