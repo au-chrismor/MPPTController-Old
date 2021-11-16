@@ -51,7 +51,7 @@
  * A7  -
  */
 
-LiquidCrystal_I2C lcd(0x27, 16, 2);
+LiquidCrystal_I2C lcd(0x3F, 16, 2);
 
 float readVolts(void){
   return (float)analogRead(VOUT) * (float)VOLTAGE_SCALE;
@@ -85,6 +85,7 @@ void setup() {
   Serial.println(VERSION);
 #endif
   lcd.init();
+  lcd.backlight();
   lcd.setCursor(0,0);
   lcd.print("Ver:");
   lcd.setCursor(0,4);
@@ -119,8 +120,12 @@ void loop() {
   Serial.print(String(int((float)powerOut/(float)256 * 100)));
   Serial.println();
 #endif
+//  lcd.clear();
   lcd.setCursor(0,0);
-  lcd.print("PWR           % ");
+//lcd.print("----------------");
+  lcd.print("Watts      PWM %");
+  lcd.setCursor(0,1);
+  lcd.print("                ");
   lcd.setCursor(0,1);
   lcd.print(String(currentPower));
   lcd.setCursor(13,1);
