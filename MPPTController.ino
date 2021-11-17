@@ -1,3 +1,5 @@
+#include <Wire.h>
+#include <LiquidCrystal_I2C.h>
 #include <math.h>
 #include "MPPTController.h"
 
@@ -39,15 +41,37 @@
  * D11 - (MOSI)
  * D12 - (MISO)
  * D13 - (SCK)
- * A0  - Vin
- * A1  - Iin
- * A2  - Vout
+ * A0  - Vout
+ * A1  - Iout
+ * A2  - 
  * A3  -
  * A4  - SDA
  * A5  - SCL
  * A6  -
  * A7  -
  */
+
+LiquidCrystal_I2C lcd(0x3F, 16, 2);
+
+float readVolts(void){
+#ifdef _DEBUG
+  Serial.print("readVolts: ");
+  Serial.println(String(analogRead(VOUT)));
+#endif  
+  return (float)analogRead(VOUT) * (float)VOLTAGE_SCALE;
+}
+
+float readAmps(void) {
+#ifdef _DEBUG
+  Serial.print("readAmps: ");
+  Serial.println(String(abs(analogRead(IOUT)-512)));
+#endif  
+  return (float)abs(analogRead(IOUT)-512) * (float)CURRENT_SCALE / 0.066;
+}
+
+int calculateDutyCycle(float value) {
+  return int((float)value/(float)256 * 100);
+}
 
 float calculatePower(float vIn, float iIn) {
   float power = 0.0;
@@ -68,7 +92,16 @@ void pwmDown(void) {
 void setup() {
   Serial.begin(115200);
   while(!Serial);
-  Serial.println("MPPT Controller 0.0.1");
+#ifdef _DEBUG  
+  Serial.print("MPPT Controller ");
+  Serial.println(VERSION);
+#endif
+  lcd.init();
+  lcd.backlight();
+  lcd.setCursor(0,0);
+  lcd.print("Ver:");
+  lcd.setCursor(0,4);
+  lcd.print(VERSION);
   pinMode(ENC_A, INPUT_PULLUP);
   pinMode(ENC_B, INPUT_PULLUP);
   pinMode(ENC_BUTTON, INPUT_PULLUP);
@@ -85,18 +118,30 @@ void loop() {
   lastPower = currentPower;
     lastVoltage = volts;
 
-  volts = analogRead(VOUT) * (float)VOLTAGE_SCALE;
-  amps = abs(analogRead(IOUT)-512) * (float)CURRENT_SCALE / 0.066;
+  volts = readVolts();
+  amps = readAmps();
   currentPower = calculatePower(volts, amps);
-  Serial.print("Vin, Iin, Power, PWM: ");
+#ifdef _DEBUG  
+/*  Serial.print("Vin, Iin, Power, PWM: ");
   Serial.print(String(volts));
   Serial.print(", ");
   Serial.print(String(amps));
   Serial.print(", ");
   Serial.print(String(currentPower));
   Serial.print(", ");
-  Serial.print(String(int((float)powerOut/(float)256 * 100)));
-  Serial.println();
+  Serial.print(String(calculateDutyCycle((float)powerOut)));
+  Serial.println(); */
+#endif
+//  lcd.clear();
+  lcd.setCursor(0,0);
+//lcd.print("----------------");
+  lcd.print("Watts      PWM %");
+  lcd.setCursor(0,1);
+  lcd.print("                ");
+  lcd.setCursor(0,1);
+  lcd.print(String(currentPower));
+  lcd.setCursor(13,1);
+  lcd.print(String(calculateDutyCycle((float)powerOut)));
   analogWrite(DRIVE, powerOut);
   if(lastPower < currentPower) {
     if(volts > lastVoltage)
@@ -110,5 +155,5 @@ void loop() {
     else
       pwmDown();
   }
-  delay(1000);
+  delay(500);
 }

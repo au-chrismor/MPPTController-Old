@@ -1,3 +1,6 @@
+#define _DEBUG
+#define VERSION "0.0.1"
+
 #define ENC_A 2
 #define ENC_B 3
 #define ENC_BUTTON 4
