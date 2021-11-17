@@ -54,11 +54,23 @@
 LiquidCrystal_I2C lcd(0x3F, 16, 2);
 
 float readVolts(void){
+#ifdef _DEBUG
+  Serial.print("readVolts: ");
+  Serial.println(String(analogRead(VOUT)));
+#endif  
   return (float)analogRead(VOUT) * (float)VOLTAGE_SCALE;
 }
 
 float readAmps(void) {
+#ifdef _DEBUG
+  Serial.print("readAmps: ");
+  Serial.println(String(abs(analogRead(IOUT)-512)));
+#endif  
   return (float)abs(analogRead(IOUT)-512) * (float)CURRENT_SCALE / 0.066;
+}
+
+int calculateDutyCycle(float value) {
+  return int((float)value/(float)256 * 100);
 }
 
 float calculatePower(float vIn, float iIn) {
@@ -110,15 +122,15 @@ void loop() {
   amps = readAmps();
   currentPower = calculatePower(volts, amps);
 #ifdef _DEBUG  
-  Serial.print("Vin, Iin, Power, PWM: ");
+/*  Serial.print("Vin, Iin, Power, PWM: ");
   Serial.print(String(volts));
   Serial.print(", ");
   Serial.print(String(amps));
   Serial.print(", ");
   Serial.print(String(currentPower));
   Serial.print(", ");
-  Serial.print(String(int((float)powerOut/(float)256 * 100)));
-  Serial.println();
+  Serial.print(String(calculateDutyCycle((float)powerOut)));
+  Serial.println(); */
 #endif
 //  lcd.clear();
   lcd.setCursor(0,0);
@@ -129,7 +141,7 @@ void loop() {
   lcd.setCursor(0,1);
   lcd.print(String(currentPower));
   lcd.setCursor(13,1);
-  lcd.print(String(int((float)powerOut/(float)256 * 100)));
+  lcd.print(String(calculateDutyCycle((float)powerOut)));
   analogWrite(DRIVE, powerOut);
   if(lastPower < currentPower) {
     if(volts > lastVoltage)
@@ -143,5 +155,5 @@ void loop() {
     else
       pwmDown();
   }
-  delay(1000);
+  delay(500);
 }
