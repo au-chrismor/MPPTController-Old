@@ -5,6 +5,11 @@ This is the beginnings of a proper charge controller, and it will grow over time
 
 Schematic is located on my EasyEDA pages.
 
+## REQUIRED LIBRARIES
+ACS712
+LiquidCrystal_I2C
+Wire
+
 ## FUNCTIONS COMPLETED
 The basic algorithm (Peturb and Observe) is implemented and has been validated on a small panel.  The software assumes the maximum voltage is 25V.  If this is not the case, you will need to change the value of VOLTAGE_SCALE in MPPTController.h
 
