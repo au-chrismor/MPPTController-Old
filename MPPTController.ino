@@ -1,7 +1,8 @@
+#include "MPPTController.h"
 #include <Wire.h>
 #include <LiquidCrystal_I2C.h>
 #include <math.h>
-#include "MPPTController.h"
+#include <ACS712.h>
 
 /*
  * Technology Demonstration of a Maximum Power Point Transfer Controller using the "Peturb and Observe" Algorithm
@@ -52,6 +53,7 @@
  */
 
 LiquidCrystal_I2C lcd(0x3F, 16, 2);
+ACS712 acs(IOUT, 5.0, 1023, 66);
 
 float readVolts(void){
 #ifdef _DEBUG
@@ -62,11 +64,12 @@ float readVolts(void){
 }
 
 float readAmps(void) {
+  int in = acs.mA_DC() / 1000;
 #ifdef _DEBUG
   Serial.print("readAmps: ");
-  Serial.println(String(abs(analogRead(IOUT)-512)));
+  Serial.println(String(in));
 #endif  
-  return (float)abs(analogRead(IOUT)-512) * (float)CURRENT_SCALE / 0.066;
+  return (float)in;
 }
 
 int calculateDutyCycle(float value) {
